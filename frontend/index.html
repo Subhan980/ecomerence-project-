@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stockroom – Online Store</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#14213d;--mute:#5d6678;--line:#dfe3ea;--acc:#2b59ff;--acc-ink:#fff;--tile:#e4ebe6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101522;--card:#192034;--ink:#eef1f8;--mute:#9aa4ba;--line:#2a3350;--acc:#6f8cff;--acc-ink:#101522;--tile:#243049}}
+:root[data-theme="dark"]{--bg:#101522;--card:#192034;--ink:#eef1f8;--mute:#9aa4ba;--line:#2a3350;--acc:#6f8cff;--acc-ink:#101522;--tile:#243049}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+h1{font-size:1.3rem;margin:0;letter-spacing:-.02em}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.btn{background:var(--acc);color:var(--acc-ink);border:0;border-radius:8px;padding:9px 16px;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+main{max-width:1080px;margin:0 auto;padding:24px 20px}
+.hero{padding:28px 0 8px}
+.hero h2{font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.1;margin:0 0 8px;letter-spacing:-.03em;max-width:16ch}
+.hero p{color:var(--mute);margin:0;max-width:52ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
+input,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-width:0}
+.bar input{flex:1 1 200px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.p{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.p .t{height:130px;background:var(--tile);display:grid;place-items:center;font-size:3rem}
+.p .b{padding:14px;display:flex;flex-direction:column;gap:4px;flex:1}
+.p h3{font-size:1rem;margin:0}
+.p small{color:var(--mute)}
+.p .r{margin-top:auto;padding-top:10px;display:flex;justify-content:space-between;align-items:center}
+.price{font-weight:700}
+.empty{color:var(--mute);padding:30px 0}
+aside{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--card);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s;z-index:10;display:flex;flex-direction:column;padding:calc(16px + env(safe-area-inset-top,0px)) 18px calc(16px + env(safe-area-inset-bottom,0px))}
+aside.open{transform:none}
+@media(prefers-reduced-motion:reduce){aside{transition:none}}
+aside h2{margin:0 0 10px;font-size:1.2rem;display:flex;justify-content:space-between;align-items:center}
+.items{flex:1;overflow:auto}
+.li{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.li .n{flex:1}
+.q{display:flex;align-items:center;gap:6px}
+.q button{width:28px;height:28px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--ink)}
+.tot{display:flex;justify-content:space-between;font-weight:700;padding:12px 0}
+form{display:grid;gap:8px}
+.msg{padding:20px 0}
+.msg h2{margin:0 0 6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Stockroom</h1>
+  <button class="btn" id="cartBtn" aria-label="Open cart">Cart (<span id="cnt">0</span>)</button>
+</header>
+<main>
+  <section class="hero">
+    <h2>Everyday goods, delivered.</h2>
+    <p>Browse the catalogue, add items to your cart and check out in under a minute.</p>
+  </section>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Search products" aria-label="Search products">
+    <select id="cat" aria-label="Category"></select>
+    <select id="sort" aria-label="Sort">
+      <option value="">Sort: Featured</option>
+      <option value="lo">Price: low to high</option>
+      <option value="hi">Price: high to low</option>
+    </select>
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<aside id="drawer" aria-label="Shopping cart">
+  <h2><span>Your cart</span><button class="btn ghost" id="close">Close</button></h2>
+  <div class="items" id="items"></div>
+  <div class="tot"><span>Total</span><span id="total">$0.00</span></div>
+  <form id="co" hidden>
+    <input name="name" placeholder="Full name" required autocomplete="name">
+    <input name="email" type="email" placeholder="Email" required autocomplete="email">
+    <input name="addr" placeholder="Delivery address" required autocomplete="street-address">
+    <select name="pay" aria-label="Payment method"><option>Cash on delivery</option><option>Card (demo)</option></select>
+    <button class="btn" type="submit">Place order</button>
+  </form>
+  <button class="btn" id="go">Checkout</button>
+</aside>
+
+<script>
+const PRODUCTS=[
+{id:1,name:"Steel water bottle",cat:"Home",price:18,icon:"🍶"},
+{id:2,name:"Canvas tote bag",cat:"Fashion",price:12,icon:"👜"},
+{id:3,name:"Wireless earbuds",cat:"Tech",price:49,icon:"🎧"},
+{id:4,name:"Desk lamp",cat:"Home",price:34,icon:"💡"},
+{id:5,name:"Running shoes",cat:"Fashion",price:65,icon:"👟"},
+{id:6,name:"Power bank 10,000 mAh",cat:"Tech",price:27,icon:"🔋"},
+{id:7,name:"Ceramic mug set",cat:"Home",price:22,icon:"☕"},
+{id:8,name:"Cotton t-shirt",cat:"Fashion",price:15,icon:"👕"},
+{id:9,name:"Mechanical keyboard",cat:"Tech",price:79,icon:"⌨️"},
+{id:10,name:"Notebook (3-pack)",cat:"Stationery",price:9,icon:"📓"},
+{id:11,name:"Gel pen set",cat:"Stationery",price:6,icon:"🖊️"},
+{id:12,name:"Backpack",cat:"Fashion",price:42,icon:"🎒"}
+];
+const $=s=>document.querySelector(s);
+const money=n=>"$"+n.toFixed(2);
+let cart={};
+try{cart=JSON.parse(localStorage.getItem("cart")||"{}")}catch(e){cart={}}
+function save(){try{localStorage.setItem("cart",JSON.stringify(cart))}catch(e){}}
+const cats=["All categories",...new Set(PRODUCTS.map(p=>p.cat))];
+$("#cat").innerHTML=cats.map((c,i)=>`<option value="${i?c:""}">${c}</option>`).join("");
+
+function render(){
+  const q=$("#q").value.trim().toLowerCase(),c=$("#cat").value,s=$("#sort").value;
+  let l=PRODUCTS.filter(p=>(!c||p.cat===c)&&p.name.toLowerCase().includes(q));
+  if(s==="lo")l.sort((a,b)=>a.price-b.price);
+  if(s==="hi")l.sort((a,b)=>b.price-a.price);
+  $("#grid").innerHTML=l.length?l.map(p=>`<article class="p"><div class="t" aria-hidden="true">${p.icon}</div><div class="b"><h3>${p.name}</h3><small>${p.cat}</small><div class="r"><span class="price">${money(p.price)}</span><button class="btn" data-add="${p.id}">Add to cart</button></div></div></article>`).join(""):`<p class="empty">No products match your search. Try a different word or category.</p>`;
+}
+function renderCart(){
+  const ids=Object.keys(cart).filter(id=>cart[id]>0);
+  let total=0,count=0;
+  $("#items").innerHTML=ids.length?ids.map(id=>{const p=PRODUCTS.find(x=>x.id==id);const n=cart[id];total+=p.price*n;count+=n;
+    return `<div class="li"><span aria-hidden="true">${p.icon}</span><div class="n">${p.name}<br><small>${money(p.price)}</small></div><div class="q"><button data-dec="${id}" aria-label="Remove one">−</button><span>${n}</span><button data-inc="${id}" aria-label="Add one">+</button></div></div>`}).join(""):`<p class="empty">Your cart is empty. Add a product to get started.</p>`;
+  $("#cnt").textContent=count;$("#total").textContent=money(total);
+  $("#go").hidden=!ids.length||!$("#co").hidden;
+  if(!ids.length)$("#co").hidden=true;
+  save();
+}
+document.addEventListener("click",e=>{
+  const t=e.target;
+  if(t.dataset.add){cart[t.dataset.add]=(cart[t.dataset.add]||0)+1;renderCart();$("#drawer").classList.add("open")}
+  if(t.dataset.inc){cart[t.dataset.inc]++;renderCart()}
+  if(t.dataset.dec){cart[t.dataset.dec]--;renderCart()}
+});
+$("#cartBtn").onclick=()=>$("#drawer").classList.add("open");
+$("#close").onclick=()=>$("#drawer").classList.remove("open");
+$("#go").onclick=()=>{$("#co").hidden=false;$("#go").hidden=true};
+$("#co").onsubmit=e=>{
+  e.preventDefault();
+  const f=new FormData(e.target),id="ORD-"+Math.floor(100000+Math.random()*900000);
+  cart={};renderCart();e.target.reset();e.target.hidden=true;
+  $("#items").innerHTML=`<div class="msg"><h2>Order placed</h2><p>Thank you, ${String(f.get("name")).replace(/[<>&]/g,"")}. Your order number is <b>${id}</b>. A confirmation will be sent to ${String(f.get("email")).replace(/[<>&]/g,"")}.</p></div>`;
+};
+["#q","#cat","#sort"].forEach(s=>$(s).addEventListener("input",render));
+render();renderCart();
+</script>
+</body>
+</html>
