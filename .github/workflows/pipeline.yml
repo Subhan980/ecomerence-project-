@@ -1,0 +1,24 @@
+name: E-commerce CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Show project files
+        run: ls -la
+
+      - name: Pipeline successful
+        run: echo "E-commerce project pipeline is working!"
